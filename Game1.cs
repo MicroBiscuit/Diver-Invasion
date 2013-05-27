@@ -48,6 +48,8 @@ namespace Diver_Invasion
         Texture2D title;
         Song song;
 
+        Random random;
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -94,6 +96,8 @@ namespace Diver_Invasion
             pause = true;
 
             dude.active = true;
+
+            random = new Random();
 
             base.Initialize();
         }
@@ -210,7 +214,117 @@ namespace Diver_Invasion
                 {
                     if (dude.P_Bullet[i].active == true)
                     {
-                        //TO-DO
+                        dude.P_Bullet[i].position.X += dude.P_Bullet[i].speed;
+                        if (dude.P_Bullet[i].position.X >= 640) { dude.P_Bullet[i].active = false; }
+                    }
+                }
+                int temp_spawn;
+                if ((int)counterB % 10 == 1)
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (enemy[i].active == false)
+                        {
+                            temp_spawn = (int)random.Next(0, 5);
+                            if (temp_spawn >= 3)
+                            {
+                                enemy[i].Randomize();
+                                enemy[i].active = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                for (int i = 0; i < 10; i++)
+                {
+                    if (enemy[i].active == true)
+                    {
+                        enemy[i].Dostuff();
+                        enemy[i].position.X -= enemy[i].speed;
+                        if (enemy[i].position.X < -48) { enemy[i].active = false; enemy[i].position.X = 640; }
+                    }
+                    for (int j = 0; j < max_enemey_bullets; j++)
+                    {
+                        if (enemy[i].B_Bullet[j].active == true)
+                        {
+                            enemy[i].B_Bullet.position.X -= enemy[i].B_Bullet[j].speed;
+                            if (enemy[i].B_Bullet[j].position.X < -16) { enemy[i].B_Bullet[j].active = false; }
+                        }
+                    }
+                }
+
+                if (dude.active == true)
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (dude.Rectangle.Intersects(enemy[i].Rectangle) && enemy[i].active == true && dude_counter <= 0)
+                        {
+                            dude.active = false;
+                            dude.die_time = counter;
+                            enemy[i].active = false;
+                            lives--;
+                            sound_die.Play();
+                            dude_counter = 100;
+                        }
+                        else
+                        {
+                            for (int j = 0; j < max_enemey_bullets; j++)
+                            {
+                                if (dude.Rectangle.Intersects(enemy[i].B_Bullet[j].Rectangle) && enemy[i].B_Bullet[j].active == true && dude_counter <= 0)
+                                {
+                                    dude.active = false;
+                                    dude.die_time = counter;
+                                    enemy[i].B_Bullet[j].active = false;
+                                    lives--;
+                                    sound_die.Play();
+                                    dude_counter = 100;
+                                }
+                            }
+                        }
+                    }
+                    for (int i = 0; i < 20; i++)
+                    {
+                        for (int j = 0; j < 10; j++)
+                        {
+                            if (dude.P_Bullet[i].Rectangle(enemy[j].Rectangle) && enemy[j].active == true && dude.P_Bullet[i].active == true)
+                            {
+                                score++;
+                                enemy[j].active = false;
+                                sound_die.Play();
+                            }
+                        }
+                    }
+                    counterB += 9;
+                }
+                if (dude_counter > 0) { dude_counter--; }
+                counter += 0.1;
+                if (esc_counter > 0) { esc_counter--; }
+                gameTime.ElapsedGameTime--;
+                if(counter >= 2.0){counter = 0.0;}
+                if(dude.shooting != -1)
+                {
+                    if(dude.shooting + 1 == (int)counter)
+                    {
+                        dude.shooting = -1;
+                    }
+                }
+                if(dude.active == false && dude.die_time + 3 >= counter)
+                {
+                    dude.position.X = 0;
+                    dude.position.Y = Window.ClientBounds.Height/2 - dude.Rectangle.Height/2;
+                    dude.active = true;
+                }
+                if(lives <= 0)
+                {
+                    pause = true;
+                    game_over = true;
+                }
+                if(score%10 == 0 && score > 0)
+                {
+                    if(dude.speed < 4)
+                    {
+                        dude.speed += 1;
+                        for(int i = 0; i < 20; i++){dude.P_Bullet[i].speed += 0.2;}
                     }
                 }
             }
@@ -227,6 +341,39 @@ namespace Diver_Invasion
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
+
+            if (!game_over)
+            {
+                spriteBatch.Draw(Background, new Vector2(0, -300+offset);
+                if(dude.active == true)
+                {
+                    dude.Draw(counter);
+                }
+                for(int i = 0; i < 20; i++)
+                {
+                    if(dude.P_Bullet[i].active == true)
+                    {
+                        dude.P_Bullet[i].Draw(counter);
+                    }
+                    if(i < 10)
+                    {
+                        if(enemy[i].active == true)
+                        {
+                            enemy[i].Draw(counter);
+                        }
+                        for(int j = 0; j < max_enemey_bullets; j++)
+                        {
+                            if(enemy[i].B_Bullet[j].active == true)
+                            {
+                                enemy[i].B_Bullet[j].Draw(counter);
+                            }
+                        }
+                    }
+                }
+                if(dude_counter > 0)
+                {
+                }
+            }
 
             base.Draw(gameTime);
 
